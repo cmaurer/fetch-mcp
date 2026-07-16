@@ -48,7 +48,9 @@ export async function renderPage(
       throw new NavigationFailedError(`Failed to navigate to "${options.url}"`, { cause: err });
     }
 
-    const remaining = Math.max(options.timeoutMs - (Date.now() - start), 0);
+    // Puppeteer treats timeout: 0 as "disable timeout" (wait forever), not "time out now" —
+    // floor at 1ms so an already-exhausted budget still times out instead of hanging.
+    const remaining = Math.max(options.timeoutMs - (Date.now() - start), 1);
     const waitCondition: WaitCondition = options.waitForSelector ? 'selector' : 'networkidle';
     let waitTimedOut = false;
     try {
