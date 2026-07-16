@@ -112,4 +112,19 @@ describe('BrowserManager', () => {
 
     expect(browser.close).toHaveBeenCalledTimes(1);
   });
+
+  it('closes a browser relaunched after a prior close() completed', async () => {
+    const { browser: browserA } = makeFakeBrowser();
+    const { browser: browserB } = makeFakeBrowser();
+    launchMock.mockResolvedValueOnce(browserA).mockResolvedValueOnce(browserB);
+    const manager = new BrowserManager();
+
+    await manager.withPage(async () => 'first browser');
+    await manager.close();
+    expect(browserA.close).toHaveBeenCalledTimes(1);
+
+    await manager.withPage(async () => 'second browser');
+    await manager.close();
+    expect(browserB.close).toHaveBeenCalledTimes(1);
+  });
 });

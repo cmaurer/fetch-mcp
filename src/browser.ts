@@ -5,7 +5,6 @@ const MAX_CONCURRENT_PAGES = 3;
 
 export class BrowserManager {
   private browserPromise: Promise<Browser> | null = null;
-  private closePromise: Promise<void> | null = null;
   private readonly limit = pLimit(MAX_CONCURRENT_PAGES);
 
   async withPage<T>(fn: (page: Page) => Promise<T>): Promise<T> {
@@ -21,20 +20,24 @@ export class BrowserManager {
   }
 
   async close(): Promise<void> {
-    if (this.closePromise) return this.closePromise;
-    if (!this.browserPromise) return;
-    const browserPromise = this.browserPromise;
-    this.browserPromise = null;
-    this.closePromise = browserPromise.then((browser) => browser.close());
-    return this.closePromise;
+    const current = this.browserPromise;
+    if (!current) return;
+    if (this.browserPromise === current) {
+      this.browserPromise = null;
+    }
+    const browser = await current;
+    await browser.close();
   }
 
   private getBrowser(): Promise<Browser> {
     if (!this.browserPromise) {
-      this.browserPromise = puppeteer.launch({ headless: true }).catch((err) => {
-        this.browserPromise = null;
+      const launchPromise: Promise<Browser> = puppeteer.launch({ headless: true }).catch((err) => {
+        if (this.browserPromise === launchPromise) {
+          this.browserPromise = null;
+        }
         throw err;
       });
+      this.browserPromise = launchPromise;
     }
     return this.browserPromise;
   }
