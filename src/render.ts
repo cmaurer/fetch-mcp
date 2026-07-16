@@ -2,6 +2,21 @@ import type { BrowserManager } from './browser.js';
 import { assertUrlIsSafe, isRequestUrlSafe } from './ssrf-guard.js';
 import { NavigationFailedError } from './errors.js';
 
+interface InterceptedRequest {
+  url(): string;
+  continue(): Promise<unknown>;
+  abort(errorCode?: string): Promise<unknown>;
+}
+
+export async function guardInterceptedRequest(request: InterceptedRequest): Promise<void> {
+  const safe = await isRequestUrlSafe(request.url());
+  if (safe) {
+    await request.continue().catch(() => {});
+  } else {
+    await request.abort('blockedbyclient').catch(() => {});
+  }
+}
+
 export interface RenderPageOptions {
   url: string;
   waitForSelector?: string;
@@ -28,13 +43,7 @@ export async function renderPage(
   return browserManager.withPage(async (page) => {
     await page.setRequestInterception(true);
     page.on('request', (request) => {
-      isRequestUrlSafe(request.url()).then((safe) => {
-        if (safe) {
-          request.continue().catch(() => {});
-        } else {
-          request.abort('blockedbyclient').catch(() => {});
-        }
-      });
+      void guardInterceptedRequest(request);
     });
 
     const start = Date.now();

@@ -16,8 +16,11 @@ let shuttingDown = false;
 async function shutdown(): Promise<void> {
   if (shuttingDown) return;
   shuttingDown = true;
-  await browserManager.close();
-  process.exit(0);
+  try {
+    await browserManager.close();
+  } finally {
+    process.exit(0);
+  }
 }
 
 process.on('SIGINT', () => {

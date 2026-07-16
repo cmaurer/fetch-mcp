@@ -22,9 +22,7 @@ export class BrowserManager {
   async close(): Promise<void> {
     const current = this.browserPromise;
     if (!current) return;
-    if (this.browserPromise === current) {
-      this.browserPromise = null;
-    }
+    this.browserPromise = null;
     const browser = await current;
     await browser.close();
   }
