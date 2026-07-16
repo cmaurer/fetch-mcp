@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import type { RequestHandlerExtra } from '@modelcontextprotocol/sdk/shared/protocol.js';
+import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
 import type { BrowserManager } from './browser.js';
 import { renderPage } from './render.js';
 import { extractContent } from './extract.js';
@@ -53,7 +53,7 @@ export function registerFetchPageTool(server: McpServer, browserManager: Browser
       inputSchema: fetchPageInputShape,
       outputSchema: fetchPageOutputShape,
     },
-    async (input, _extra) => {
+    async (input) => {
       try {
         const rendered = await renderPage(browserManager, {
           url: input.url,
@@ -80,7 +80,7 @@ export function registerFetchPageTool(server: McpServer, browserManager: Browser
           structuredContent,
         };
       } catch (err) {
-        return toToolError(err);
+        return toToolError(err) as CallToolResult;
       }
     }
   );
