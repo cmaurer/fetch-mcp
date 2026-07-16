@@ -20,6 +20,7 @@ export class NavigationFailedError extends Error {
 }
 
 export interface ToolErrorResult {
+  [x: string]: unknown;
   content: Array<{ type: 'text'; text: string }>;
   isError: true;
 }
