@@ -87,4 +87,29 @@ describe('BrowserManager', () => {
 
     expect(browser.close).toHaveBeenCalledTimes(1);
   });
+
+  it('clears the cached launch promise on failure so a later withPage call retries', async () => {
+    launchMock.mockRejectedValueOnce(new Error('chromium failed to start'));
+    const manager = new BrowserManager();
+
+    await expect(manager.withPage(async () => 'never')).rejects.toThrow(
+      'chromium failed to start'
+    );
+
+    const { browser } = makeFakeBrowser();
+    launchMock.mockResolvedValue(browser);
+    await expect(manager.withPage(async () => 'recovered')).resolves.toBe('recovered');
+    expect(launchMock).toHaveBeenCalledTimes(2);
+  });
+
+  it('closes the browser only once when close() is called concurrently', async () => {
+    const { browser } = makeFakeBrowser();
+    launchMock.mockResolvedValue(browser);
+    const manager = new BrowserManager();
+
+    await manager.withPage(async () => 'warm up');
+    await Promise.all([manager.close(), manager.close()]);
+
+    expect(browser.close).toHaveBeenCalledTimes(1);
+  });
 });
