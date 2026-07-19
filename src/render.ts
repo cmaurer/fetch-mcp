@@ -25,6 +25,11 @@ export interface RenderPageOptions {
 
 export type WaitCondition = 'selector' | 'networkidle';
 
+// Puppeteer's default UA advertises "HeadlessChrome", which is a trivial bot-detection
+// signal; present as an ordinary desktop Chrome install instead.
+const USER_AGENT =
+  'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36';
+
 export interface RenderResult {
   finalUrl: string;
   httpStatus: number;
@@ -41,6 +46,7 @@ export async function renderPage(
   await assertUrlIsSafe(options.url);
 
   return browserManager.withPage(async (page) => {
+    await page.setUserAgent(USER_AGENT);
     await page.setRequestInterception(true);
     page.on('request', (request) => {
       void guardInterceptedRequest(request);
