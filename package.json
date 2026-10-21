@@ -18,7 +18,7 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.29.0",
+    "@modelcontextprotocol/sdk": "^1.32.0",
     "@mozilla/readability": "^0.6.0",
     "ipaddr.js": "^2.4.0",
     "jsdom": "^29.1.1",
